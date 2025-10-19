@@ -1,5 +1,70 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# ==========================
+# Node.js / General
+# ==========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
 
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==========================
+# Prisma
+# ==========================
+# Generated Prisma client
 /generated/prisma
+backend/generated/
+backend/prisma/generated/
+backend/prisma/migrations/dev.db-journal
+backend/prisma/dev.db
+
+# ==========================
+# Build Artifacts
+# ==========================
+dist/
+build/
+.cache/
+tmp/
+temp/
+
+# ==========================
+# Logs
+# ==========================
+logs/
+*.log
+*.log.*
+
+# ==========================
+# OS / Editor files
+# ==========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
+
+# ==========================
+# Frontend (React / Vite)
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+frontend/build/
+frontend/.eslintcache
+
+# ==========================
+# Docker / Misc
+# ==========================
+docker-compose.override.yml
+.docker/
+*.pid
