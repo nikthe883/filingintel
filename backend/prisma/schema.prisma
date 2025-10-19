@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CompanyCore {
+  id           Int           @id @default(autoincrement())
+  ticker       String        @unique
+  name         String
+  cik          String        @unique
+  cikNumber    String
+  lastChecked  DateTime?     @default(now())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  filings      FilingCore[] 
+}
+
+model FilingCore {
+  id              BigInt    @id @default(autoincrement())
+  accessionNumber String    @unique
+  companyTicker   String
+  formCode        String
+  filingDate      DateTime
+  filingUrl       String
+  filingUrlJson   String
+  raw             Json
+  ingestedAt      DateTime  @default(now())
+  processedAt     DateTime?
+  flattenedAt     DateTime?
+  companyId       Int
+
+  company CompanyCore @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, filingDate])
+  @@index([companyTicker, filingDate])
+  @@index([formCode, filingDate])
+}
+
+model FilingFlat {
+  id              BigInt    @id @default(autoincrement())
+  accessionNumber String    @unique
+  companyTicker   String
+  formCode        String
+  formCategory    String?
+  filingDate      DateTime
+  periodEndDate   DateTime?
+  totalBuys       Float?
+  totalSells      Float?
+  totalExercises  Float?
+  sentiment       String?
+  mainOwners      Json?
+  revenue         Float?
+  netIncome       Float?
+  epsBasic        Float?
+  fiscalYear      Int?
+  headline        String?
+  items           Json?
+  filingUrl       String
+  source          String?
+  year            Int
+  createdAt       DateTime  @default(now())
+
+  @@index([companyTicker, filingDate])
+  @@index([formCode, filingDate])
+}
+
+model PriceDaily {
+  id            BigInt   @id @default(autoincrement())
+  companyTicker String
+  date          DateTime
+  open          Float
+  close         Float
+  high          Float
+  low           Float
+  volume        Float
+  createdAt     DateTime @default(now())
+
+  @@unique([companyTicker, date])
+  @@index([companyTicker, date])
+}
+
+model NewsArticle {
+  id            BigInt   @id @default(autoincrement())
+  companyTicker String
+  publishedAt   DateTime
+  headline      String
+  source        String?
+  url           String?
+  sentiment     Float?
+  createdAt     DateTime @default(now())
+
+  @@index([companyTicker, publishedAt])
+}
+
+model FilingAnomaly {
+  id            BigInt   @id @default(autoincrement())
+  companyTicker String
+  filingId      BigInt?
+  filingDate    DateTime
+  metric        String
+  score         Float
+  description   String?
+  severity      String?
+  createdAt     DateTime @default(now())
+
+  @@index([companyTicker, filingDate])
+}
