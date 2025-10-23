@@ -1,4 +1,5 @@
 import { PrismaClient } from "../generated/prisma/index.js";
+import {SEC_HEADERS} from "../src/config/constants.js"
 import axios from "axios";
 
 const prisma = new PrismaClient();
@@ -9,10 +10,7 @@ async function populateCompaniesFromSEC() {
   const SEC_URL = "https://www.sec.gov/files/company_tickers.json";
 
   const res = await axios.get(SEC_URL, {
-    headers: {
-      "User-Agent": "yourname@example.com", 
-      "Accept-Encoding": "gzip, deflate",
-    },
+    headers: SEC_HEADERS,
   });
 
   const data = res.data;
@@ -26,7 +24,7 @@ async function populateCompaniesFromSEC() {
     const cik = c.cik_str.toString().padStart(10, "0");
 
     await prisma.companyCore.upsert({
-    where: { cik }, // 👈 change this line
+    where: { cik }, 
     update: {
         ticker,
         name: c.title,
