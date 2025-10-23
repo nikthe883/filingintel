@@ -1,13 +1,11 @@
 import { PrismaClient } from "../generated/prisma/index.js";
-import {SEC_HEADERS} from "../src/config/constants.js"
+import {SEC_HEADERS, SEC_URL} from "../src/config/constants.js"
 import axios from "axios";
 
 const prisma = new PrismaClient();
-// TODO make this good.
+
 async function populateCompaniesFromSEC() {
   console.log("Fetching company data from SEC...");
-
-  const SEC_URL = "https://www.sec.gov/files/company_tickers.json";
 
   const res = await axios.get(SEC_URL, {
     headers: SEC_HEADERS,
