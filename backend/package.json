@@ -5,10 +5,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "populateFillingsCore": "node prisma/seedFillings.js --"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+    
   },
   "keywords": [],
   "author": "",
