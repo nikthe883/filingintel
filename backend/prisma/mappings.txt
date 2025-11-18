@@ -1,0 +1,302 @@
+This is a helper document to know what is what forsec fillings\
+
+| Form        | Purpose                                |
+| ----------- | -------------------------------------- |
+| **4**       | Insider buy/sell (actual transactions) |
+| **3**       | Insider initial ownership              |
+| **5**       | Insider yearly summary                 |
+| **144**     | Planned insider sale                   |
+| **13F-HR**  | Fund quarterly holdings                |
+| **13F-NT**  | No holdings table                      |
+| **13D**     | 5%+ activist filing                    |
+| **13G**     | 5%+ passive filing                     |
+| **10-K**    | Annual financials                      |
+| **10-Q**    | Quarterly financials                   |
+| **8-K**     | Major events                           |
+| **S-1**     | IPO filing                             |
+| **S-3**     | Shelf registration                     |
+| **DEF 14A** | Proxy, compensation                    |
+| **F-1/F-3** | Foreign registrants                    |
+
+🟢 Insider Transaction Forms
+Form 4 — Insider Buying/Selling
+
+Executed transactions (buys, sells, option exercises)
+
+Includes number of shares, price, owner name
+
+Most important form for “insider trading”
+
+Form 3 — Initial Insider Ownership
+
+Filed when someone becomes an insider (new director, officer)
+
+Shows initial holdings
+
+Form 5 — Annual Insider Summary
+
+End-of-year summary of insider transactions
+
+Less common
+
+Form 144 — Planned Insider Sale
+
+Insider intends to sell restricted/control securities
+
+Notice of planned sale
+
+Not an actual sale
+
+🔵 Institutional / Fund Filing Forms
+Form 13F-HR — Quarterly Holdings Report
+
+Discloses equity holdings of funds with >$100M AUM
+
+Lists all stock positions, share counts, values
+
+Filed every quarter
+
+Form 13F-NT — Notice (No Holdings List)
+
+Manager files 13F but attaches holdings with another manager
+
+No holdings table inside
+
+Form 13D — Activist/Control Filing
+
+Filed when someone acquires 5%+ ownership with intent to influence control
+
+Often indicates activist investors
+
+Form 13G — Passive Ownership Filing
+
+Filed when someone acquires 5%+ but passively (not activist)
+
+🟣 Earnings & Periodic Reports
+10-K — Annual Report
+
+Full annual financials
+
+Revenue, net income, EPS, risk factors
+
+10-Q — Quarterly Report
+
+Quarterly financials (revenue, earnings, expenses)
+
+8-K — Current Event Report
+
+Material events (layoffs, earnings guidance, acquisitions)
+
+🟠 Registration & Offering Forms
+S-1 — IPO Registration
+
+Used for companies going public
+
+S-3 — Shelf Registration
+
+Used for secondary offerings or more frequent fundraising
+
+🟡 Proxy Forms
+DEF 14A — Proxy Statement
+
+Executive compensation
+
+Board elections
+
+Shareholder voting materials
+
+🔴 Other less common forms
+SC 13E3, SC 13E4, TO, etc.
+
+Tender offers and going-private transactions
+
+F-1, F-3, F-4
+
+Foreign issuer registration forms
+
+
+TRANSACTION CODES:
+
+Code	Meaning	Buy/Sell?
+P	Open market Purchase	Buy
+S	Open market Sale	Sell
+A	Grant, award (shares received)	Buy
+D	Disposition (not necessarily sold)	Sell or Transfer
+F	Payment of tax via share withholding	Neutral
+M	Option exercise (convert option → shares)	Buy (exercise)
+G	Gift	Neutral
+X	Conversion of derivative security	Neutral
+
+
+FOR ONLY ONE FORM 4 FILLING JUST TO CHECK THOSE THINGS:
+
+Form 4 → FilingFlat Mapping (Plain Text)
+🔷 From XML Header
+FilingFlat.accessionNumber
+
+→ The accession number from the filing URL or index.json (not shown in XML)
+
+FilingFlat.companyTicker
+
+→ <issuerTradingSymbol>
+NVDA
+
+FilingFlat.formCode
+
+→ <documentType>
+4
+
+FilingFlat.formCategory
+
+→ "Insider Transaction"
+
+FilingFlat.filingDate
+
+→ <ownerSignature><signatureDate>
+2025-10-31
+
+FilingFlat.periodEndDate
+
+→ <periodOfReport>
+2025-10-29
+
+🔷 Insider Transaction Totals
+
+From all <nonDerivativeTransaction> items:
+
+Each has:
+
+<transactionCode> = S (Sale)
+
+<transactionAcquiredDisposedCode> = D (Disposed)
+
+<transactionShares><value> = number sold
+
+FilingFlat.totalSells
+
+→ Sum of all "S" transactions
+= 3013 + 7790 + 5118 + 2724 + 2580 + 3298 + 477
+= 25,000 shares sold
+
+FilingFlat.totalBuys
+
+→ There are no "A" (acquired) transactions
+= null
+
+FilingFlat.totalExercises
+
+→ No derivative or option exercises
+= null
+
+🔷 Sentiment
+
+Based on sales only
+→ "Negative"
+(or leave null depending on your logic)
+
+🔷 Main Owners
+FilingFlat.mainOwners
+
+→ Includes insider identity + role
+
+From XML:
+
+Name: HUANG JEN HSUN
+
+CIK: 0001197649
+
+Director: 1
+
+Officer: 1
+
+OfficerTitle: “President and CEO”
+
+Stored as JSON:
+
+{
+  "name": "HUANG JEN HSUN",
+  "cik": "0001197649",
+  "roles": ["Director", "Officer"],
+  "title": "President and CEO"
+}
+
+🔷 Financial Metrics (Do Not Exist in Form 4)
+
+These fields stay null:
+
+revenue
+
+netIncome
+
+epsBasic
+
+fiscalYear
+
+Form 4 does NOT contain financial statements.
+
+🔷 Headline
+
+Suggested mapping:
+
+FilingFlat.headline
+
+→ "Insider Sale by Jen-Hsun Huang"
+
+🔷 Items (Full Transaction List)
+
+This contains all parsed transactions, including:
+
+security title
+
+number of shares sold
+
+price
+
+ownership nature
+
+post-transaction holdings
+
+Stored as JSON:
+
+[
+  { shares: 3013, price: 205.6542, code: "S" },
+  { shares: 7790, price: 206.7567, code: "S" },
+  ...
+]
+
+🔷 FilingFlat.filingUrl
+
+→ The URL of the XML or HTML you downloaded
+Example:
+
+https://www.sec.gov/Archives/edgar/data/1045810/000119764925000056/wk-form4_1761944802.xml
+
+🔷 FilingFlat.source
+
+→ "SEC"
+(or "Form 4" depending on your design)
+
+🔷 FilingFlat.year
+
+→ Extracted from filingDate
+2025
+
+🟩 Summary Table
+FilingFlat Column	Value from XML
+accessionNumber	from index.json
+companyTicker	NVDA
+formCode	4
+formCategory	Insider Transaction
+filingDate	2025-10-31
+periodEndDate	2025-10-29
+totalBuys	null
+totalSells	25000
+totalExercises	null
+sentiment	Negative
+mainOwners	Insider info JSON
+revenue, netIncome, epsBasic, fiscalYear	null
+headline	Insider Sale by Jen-Hsun Huang
+items	All transactions JSON
+filingUrl	XML/HTML URL
+source	SEC
+year	2025
