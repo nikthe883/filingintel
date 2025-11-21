@@ -4,6 +4,10 @@ import { fetchCikData } from "../src/Helpers/helpers.js";
 import { XMLParser } from "fast-xml-parser";
 import axios from "axios";
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "",
@@ -13,42 +17,58 @@ const prisma = new PrismaClient();
 
 const TESTURL = "https://www.sec.gov/Archives/edgar/data/1045810/000158867025000013/wk-form4_1762387575.xml"
 
-async function fetchFiling(urls) {
-  const { data: xml } = await axios.get(urls, {
-    headers: SEC_HEADERS
-  });
+async function fetchFiling(url,accessionNumber) {
 
+  await sleep(500);
+  try {
+    const { data: xml } = await axios.get(url, { headers: SEC_HEADERS });
 
+    const json = parser.parse(xml);
+    const doc = json.ownershipDocument;
 
-  const json = parser.parse(xml);
+    const owner = doc.reportingOwner.reportingOwnerId;
+    // Need to check every transaction in there
+    const txs = doc.nonDerivativeTable.nonDerivativeTransaction;
+    // Not only one buy or sell per URL, mind that there could be more
+    const first = txs[0];
 
-  const doc = json.ownershipDocument;
+    const issuerTradingSymbol = doc.issuer.issuerTradingSymbol;
 
-  // reporting owner info
-  const owner = doc.reportingOwner.reportingOwnerId;
+    return {
+      accessionNumber: accessionNumber,
+      filingUrl:url[0],
+      mainOwners: owner.rptOwnerName,
+      filingDate: new Date(first.transactionDate.value),
+      formCode: first.transactionCoding.transactionCode, // This is not the form code but the buy or sell B or S
+      blockedBySec: 0,
+      companyTicker:issuerTradingSymbol,
+      createdAt :new Date(),
+      year : new Date(first.transactionDate.value).getFullYear()
 
-  // all transactions array (SAFE)
-  const txs = doc.nonDerivativeTable.nonDerivativeTransaction;
-  
-  // first transaction
-  const first = txs[0];
+    };
+  } catch (err) {
+    return {
+      blockedBySec : 1,
+      filingUrl:url[0],
+      accessionNumber: accessionNumber,
+      companyTicker : String(Math.random()),
+      year : 1,
+      createdAt: null,
+      formCode: null,
+      filingDate: null
 
-  // IMPORTNAT SEC FILLING CAN HAVE MULTIPLE TRANSACTION BUT ONE INSIDER THEY CAN REPORT MANY TRADES
-
-  return {
-    cik: owner.rptOwnerCik,
-    name: owner.rptOwnerName,
-    firstTransactionDate: first.transactionDate.value,
-    firstTransactionCode: first.transactionCoding.transactionCode
-  };
+    };
+  }
 }
   const fillings = await prisma.filingCore.findMany({
   where: { formCode: "4" },
-  select: { filingUrl: true }, 
-  take: 10
+  select: { filingUrl: true, accessionNumber: true }, 
+  take: 15
 });
-
+// Sec blocking form time to time, best to add the block to the database and try again later
+// Better to get that URL in FillingsCore as well
   for(const filling of fillings){
+
     const { data: data } = await axios.get(filling.filingUrl, {
         headers: SEC_HEADERS
       });
@@ -56,11 +76,10 @@ async function fetchFiling(urls) {
     const xmlLinks = [...data.matchAll(/href="([^"]+\.xml)"/g)]
         .map(match => baseUrl + match[1]);
 
- console.log(await fetchFiling(xmlLinks));
-
+ console.log(await fetchFiling(xmlLinks,filling.accessionNumber));
+ // for testing to write in the DB
+ // Need to change the table format a lot
+ const dataIn = await fetchFiling(xmlLinks)
+    await prisma.FilingFlat.createMany({ data: [dataIn], skipDuplicates: true });
   }
 
-
-// (async () => {
-//   
-// })();

@@ -44,11 +44,11 @@ model FilingCore {
 
 model FilingFlat {
   id              BigInt    @id @default(autoincrement())
-  accessionNumber String    @unique
-  companyTicker   String
-  formCode        String
+  accessionNumber String?   @unique
+  companyTicker   String?
+  formCode        String?
   formCategory    String?
-  filingDate      DateTime
+  filingDate      DateTime?
   periodEndDate   DateTime?
   totalBuys       Float?
   totalSells      Float?
@@ -63,11 +63,13 @@ model FilingFlat {
   items           Json?
   filingUrl       String
   source          String?
-  year            Int
-  createdAt       DateTime  @default(now())
+  year            Int?
+  createdAt       DateTime?  @default(now())
+  blockedBySec    Int?
 
   @@index([companyTicker, filingDate])
   @@index([formCode, filingDate])
+  @@index([blockedBySec, filingUrl])
 }
 
 model PriceDaily {

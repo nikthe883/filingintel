@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "FilingFlat" ALTER COLUMN "year" DROP NOT NULL,
+ALTER COLUMN "createdAt" DROP NOT NULL;
