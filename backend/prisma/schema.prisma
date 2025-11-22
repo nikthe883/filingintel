@@ -46,10 +46,8 @@ model FormFourFillings {
   id                BigInt    @id @default(autoincrement())
   accessionNumber   String?   @unique
   companyTicker     String?   @unique
-  transactionCode   String?
+  raw               Json?     
   filingDate        DateTime?
-  totalBuys         Float?
-  totalSells        Float?
   ownerName         String?
   ownerTitle        String?
   formFourXML       String
