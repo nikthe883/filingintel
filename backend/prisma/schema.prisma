@@ -42,34 +42,24 @@ model FilingCore {
   @@index([formCode, filingDate])
 }
 
-model FilingFlat {
-  id              BigInt    @id @default(autoincrement())
-  accessionNumber String?   @unique
-  companyTicker   String?
-  formCode        String?
-  formCategory    String?
-  filingDate      DateTime?
-  periodEndDate   DateTime?
-  totalBuys       Float?
-  totalSells      Float?
-  totalExercises  Float?
-  sentiment       String?
-  mainOwners      Json?
-  revenue         Float?
-  netIncome       Float?
-  epsBasic        Float?
-  fiscalYear      Int?
-  headline        String?
-  items           Json?
-  filingUrl       String
-  source          String?
-  year            Int?
-  createdAt       DateTime?  @default(now())
-  blockedBySec    Int?
+model FormFourFillings {
+  id                BigInt    @id @default(autoincrement())
+  accessionNumber   String?   @unique
+  companyTicker     String?   @unique
+  transactionCode   String?
+  filingDate        DateTime?
+  totalBuys         Float?
+  totalSells        Float?
+  ownerName         String?
+  ownerTitle        String?
+  formFourXML       String
+  createdAt         DateTime?  @default(now())
+  blockedBySec      Int?
 
   @@index([companyTicker, filingDate])
   @@index([formCode, filingDate])
-  @@index([blockedBySec, filingUrl])
+  @@index([blockedBySec, formFourXML])
+  @@index([companyTicker, totalBuys,totalSells,ownerName])
 }
 
 model PriceDaily {

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { XMLParser } from "fast-xml-parser";
 
 export async function fetchCikData(url, header) {
   const res = await axios.get(url, { headers: header });
@@ -11,3 +12,13 @@ export async function fetchCikData(url, header) {
     recent: data.filings?.recent ?? null 
   };
 }
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "",
+  allowBooleanAttributes: true
+});

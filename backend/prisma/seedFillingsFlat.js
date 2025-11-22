@@ -1,47 +1,68 @@
 import { PrismaClient } from "../generated/prisma/index.js";
-import { SEC_HEADERS, SEC_COMPANY_FILINGS_URL } from "../src/config/constants.js";
-import { fetchCikData } from "../src/Helpers/helpers.js";
-import { XMLParser } from "fast-xml-parser";
+import { SEC_HEADERS, SEC_BASE_URL } from "../src/config/constants.js";
+import { sleep, parser } from "../src/Helpers/helpers.js";
 import axios from "axios";
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const parser = new XMLParser({
-  ignoreAttributes: false,
-  attributeNamePrefix: "",
-  allowBooleanAttributes: true
-});
 const prisma = new PrismaClient();
 
-const TESTURL = "https://www.sec.gov/Archives/edgar/data/1045810/000158867025000013/wk-form4_1762387575.xml"
+async function getInfo(doc){
 
-async function fetchFiling(url,accessionNumber) {
+  const transactions = doc.nonDerivativeTable.nonDerivativeTransaction;
 
+  // Array of information per transaction
+  const infoPerTransaction = transactions.map(tx => ({
+
+    securityTitle: tx.securityTitle.value,
+    transactionCode: tx.transactionCoding.transactionCode.value,
+    shares: tx.transactionAmounts.transactionShares?.value,
+    price: tx.transactionAmounts.transactionPricePerShare?.value,
+
+  }))
+
+  // Total numbers
+  const totalTransactionAmount = result.reduce((sum, tx) => sum + tx.shares * tx.price, 0);
+  const totalShares = result.reduce((sum, tx) => sum + tx.shares, 0);
+  const totalMoney = result.reduce((sum, tx) => sum + tx.price, 0);
+  const weightedAveragePrice = totalTransactionAmount / totalShares;
+
+  return{
+    separateTransactionInfo: infoPerTransaction,
+    totalTransactionAmount : totalTransactionAmount,
+    totalShares : totalShares,
+    totalMoney : totalMoney,
+    weightedAveragePrice: weightedAveragePrice
+  }
+}
+
+
+async function fetchFiling(url, accessionNumber) {
   await sleep(500);
+
   try {
     const { data: xml } = await axios.get(url, { headers: SEC_HEADERS });
 
     const json = parser.parse(xml);
     const doc = json.ownershipDocument;
 
-    const owner = doc.reportingOwner.reportingOwnerId;
+    //Getting data to fill the table
+    const owner = doc.reportingOwner.reportingOwnerId.rptOwnerName;
+    const companyTicker = doc.issuer.issuerTradingSymbol;
+    
+
     // Need to check every transaction in there
-    const txs = doc.nonDerivativeTable.nonDerivativeTransaction;
+    
     // Not only one buy or sell per URL, mind that there could be more
     const first = txs[0];
 
-    const issuerTradingSymbol = doc.issuer.issuerTradingSymbol;
-
     return {
       accessionNumber: accessionNumber,
+      companyTicker:companyTicker,
       filingUrl:url[0],
-      mainOwners: owner.rptOwnerName,
+      mainOwners: owner,
       filingDate: new Date(first.transactionDate.value),
       formCode: first.transactionCoding.transactionCode, // This is not the form code but the buy or sell B or S
       blockedBySec: 0,
-      companyTicker:issuerTradingSymbol,
+      
       createdAt :new Date(),
       year : new Date(first.transactionDate.value).getFullYear()
 
@@ -67,19 +88,21 @@ async function fetchFiling(url,accessionNumber) {
 });
 // Sec blocking form time to time, best to add the block to the database and try again later
 // Better to get that URL in FillingsCore as well
-  for(const filling of fillings){
+//   for(const filling of fillings){
 
-    const { data: data } = await axios.get(filling.filingUrl, {
-        headers: SEC_HEADERS
-      });
-    const baseUrl = "https://www.sec.gov";
-    const xmlLinks = [...data.matchAll(/href="([^"]+\.xml)"/g)]
-        .map(match => baseUrl + match[1]);
+//     const { data: data } = await axios.get(filling.filingUrl, {
+//         headers: SEC_HEADERS
+//       });
+//     const baseUrl = SEC_BASE_URL;
+//     const xmlLinks = [...data.matchAll(/href="([^"]+\.xml)"/g)]
+//         .map(match => baseUrl + match[1]);
 
- console.log(await fetchFiling(xmlLinks,filling.accessionNumber));
- // for testing to write in the DB
- // Need to change the table format a lot
- const dataIn = await fetchFiling(xmlLinks)
-    await prisma.FilingFlat.createMany({ data: [dataIn], skipDuplicates: true });
-  }
+//  console.log(await fetchFiling(xmlLinks,filling.accessionNumber));
+//  // for testing to write in the DB
+//  // Need to change the table format a lot
+//  const dataIn = await fetchFiling(xmlLinks)
+//     await prisma.FilingFlat.createMany({ data: [dataIn], skipDuplicates: true });
+//   }
+
+test()
 
